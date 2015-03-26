@@ -103,7 +103,7 @@ STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
 
 OBJ        = $(PROGRAM).o
-OPTIMIZE = -Os -fno-inline-small-functions -fno-split-wide-types -mshort-calls
+OPTIMIZE = -Os -fno-inline-small-functions -fno-split-wide-types -mrelax
 
 DEFS       = 
 LIBS       =
@@ -539,7 +539,7 @@ lilypad_resonator_isp: EFUSE ?= 04
 lilypad_resonator_isp: isp
 
 pro8: TARGET = pro_8MHz
-pro8: CHIP = atmega168
+pro8: CHIP = atmega328
 pro8:
 	$(MAKE) $(CHIP) AVR_FREQ=8000000L LED_START_FLASHES=3
 	mv $(PROGRAM)_$(CHIP).hex $(PROGRAM)_$(TARGET).hex
@@ -572,6 +572,18 @@ atmega328_pro8_isp: LFUSE ?= FF
 # 2.7V brownout
 atmega328_pro8_isp: EFUSE ?= DE
 atmega328_pro8_isp: isp
+
+mysensor_micro: atmega328_pro8
+mysensor_micro: target = atmega_pro_8MHz
+mysensor_micro: MCU_TARGET = atmega328p
+# 512 byte boot, SPIEN
+mysensor_micro: HFUSE ?= DE
+# Low power xtal (16MHz) 16KCK/14CK+65ms
+mysensor_micro: LFUSE ?= FF
+# 2.7V brownout
+mysensor_micro: EFUSE ?= DE
+mysensor_micro: LED=C3
+mysensor_micro: BAUD_RATE=57600
 
 # 1MHz clocked platforms
 #
@@ -617,7 +629,7 @@ isp-stk500: $(PROGRAM)_$(TARGET).hex
 	$(STK500-1)
 	$(STK500-2)
 
-%.elf: $(OBJ) baudcheck $(dummy)
+%.elf: $(OBJ) $(dummy)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 	$(SIZE) $@
 
